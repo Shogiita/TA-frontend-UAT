@@ -3,7 +3,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 
 import '../../../shared/widgets/loading_widget.dart';
-import '../../../shared/widgets/stat_card.dart';
 import '../../sna/pages/sna_visualization_page.dart';
 import '../bloc/report_bloc.dart';
 import '../bloc/report_event.dart';
@@ -13,32 +12,43 @@ import '../models/network_analysis_model.dart';
 import '../models/top_content_model.dart';
 
 class _DS {
-  static const Color surface = Color(0xFFF4F6FB);
+  static const Color surface = Color(0xFFF8FAFC);
   static const Color card = Colors.white;
-  static const Color primary = Color(0xFF2563EB);
+  static const Color primary = Color(0xFF3B82F6);
   static const Color purple = Color(0xFF8B5CF6);
   static const Color green = Color(0xFF10B981);
+  static const Color accent = Color(0xFFF59E0B);
 
-  static const Color textPrimary = Color(0xFF0F172A);
+  static const Color textPrimary = Color(0xFF1E293B);
   static const Color textSecondary = Color(0xFF64748B);
   static const Color border = Color(0xFFE2E8F0);
+  static const Color shadow = Color(0xFFCBD5E1);
 
-  static const double radius = 22;
-  static const double gap = 18;
+  static const double radius = 24;
+  static const double gap = 20;
 
   static List<BoxShadow> softShadow = [
     BoxShadow(
-      color: Colors.black.withValues(alpha: 0.06),
-      blurRadius: 22,
-      offset: const Offset(0, 8),
+      color: shadow.withValues(alpha: 0.08),
+      blurRadius: 24,
+      offset: const Offset(0, 12),
     ),
   ];
 
   static List<BoxShadow> primaryShadow = [
     BoxShadow(
-      color: primary.withValues(alpha: 0.28),
-      blurRadius: 28,
-      offset: const Offset(0, 10),
+      color: primary.withValues(alpha: 0.32),
+      blurRadius: 32,
+      offset: const Offset(0, 16),
+    ),
+  ];
+
+  static List<BoxShadow> glowShadow = [
+    BoxShadow(
+      color: primary.withValues(alpha: 0.2),
+      blurRadius: 40,
+      spreadRadius: 8,
+      offset: const Offset(0, 20),
     ),
   ];
 }
@@ -383,15 +393,53 @@ class _ReportPageState extends State<ReportPage>
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: _DS.surface,
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _openSnaConfigDialog,
-        backgroundColor: _DS.primary,
-        foregroundColor: Colors.white,
-        icon: const Icon(Icons.hub_rounded),
-        label: const Text(
-          'Visualisasi SNA',
-          style: TextStyle(fontWeight: FontWeight.w800),
-        ),
+      floatingActionButton: AnimatedBuilder(
+        animation: animationController,
+        builder: (context, child) {
+          final animation = CurvedAnimation(
+            parent: animationController,
+            curve: Curves.elasticOut,
+          );
+
+          return ScaleTransition(
+            scale: animation,
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [_DS.primary, _DS.purple],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(28),
+                boxShadow: _DS.glowShadow,
+              ),
+              child: FloatingActionButton.extended(
+                onPressed: _openSnaConfigDialog,
+                backgroundColor: Colors.transparent,
+                foregroundColor: Colors.white,
+                elevation: 0,
+                icon: const Icon(Icons.hub_rounded, size: 24),
+                label: const Text(
+                  'Visualisasi SNA',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w800,
+                    fontSize: 14,
+                    shadows: [
+                      Shadow(
+                        color: Colors.black26,
+                        blurRadius: 4,
+                        offset: Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(28),
+                ),
+              ),
+            ),
+          );
+        },
       ),
       body: BlocBuilder<ReportBloc, ReportState>(
         builder: (context, state) {
@@ -413,7 +461,12 @@ class _ReportPageState extends State<ReportPage>
                     context.read<ReportBloc>().add(const LoadReportDashboard());
                   },
                   child: ListView(
-                    padding: const EdgeInsets.fromLTRB(24, 24, 24, 90),
+                    padding: EdgeInsets.fromLTRB(
+                      16,
+                      16,
+                      16,
+                      MediaQuery.of(context).size.width < 600 ? 100 : 90,
+                    ),
                     children: [
                       _header(),
                       const SizedBox(height: _DS.gap),
@@ -441,73 +494,129 @@ class _ReportPageState extends State<ReportPage>
   }
 
   Widget _header() {
-    return Container(
-      padding: const EdgeInsets.all(28),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [_DS.primary, _DS.purple],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(_DS.radius),
-        boxShadow: _DS.primaryShadow,
-      ),
-      child: Stack(
-        children: [
-          Positioned(
-            right: -28,
-            top: -36,
+    return AnimatedBuilder(
+      animation: fadeAnimation,
+      builder: (context, child) {
+        final isMobile = MediaQuery.of(context).size.width < 768;
+        final padding = isMobile ? 20.0 : 32.0;
+
+        return FadeTransition(
+          opacity: fadeAnimation,
+          child: SlideTransition(
+            position: slideAnimation,
             child: Container(
-              width: 140,
-              height: 140,
+              padding: EdgeInsets.all(padding),
               decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: Colors.white.withValues(alpha: 0.08),
+                gradient: LinearGradient(
+                  colors: [_DS.primary, _DS.purple, _DS.accent],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  stops: const [0.0, 0.6, 1.0],
+                ),
+                borderRadius: BorderRadius.circular(_DS.radius),
+                boxShadow: _DS.primaryShadow,
+              ),
+              child: Stack(
+                children: [
+                  if (!isMobile)
+                    Positioned(
+                      right: -32,
+                      top: -40,
+                      child: Container(
+                        width: 160,
+                        height: 160,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Colors.white.withValues(alpha: 0.12),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.white.withValues(alpha: 0.1),
+                              blurRadius: 60,
+                              spreadRadius: 20,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  if (!isMobile)
+                    Positioned(
+                      left: -20,
+                      bottom: -20,
+                      child: Container(
+                        width: 100,
+                        height: 100,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: _DS.accent.withValues(alpha: 0.15),
+                        ),
+                      ),
+                    ),
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.22),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: Colors.white.withValues(alpha: 0.3),
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.white.withValues(alpha: 0.2),
+                              blurRadius: 20,
+                              offset: const Offset(0, 8),
+                            ),
+                          ],
+                        ),
+                        child: Icon(
+                          Icons.analytics_rounded,
+                          color: Colors.white,
+                          size: isMobile ? 24 : 32,
+                        ),
+                      ),
+                      SizedBox(width: isMobile ? 12 : 18),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'SNA Lite UAT Dashboard',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: isMobile ? 20 : 28,
+                                fontWeight: FontWeight.w900,
+                                shadows: [
+                                  Shadow(
+                                    color: const Color.fromRGBO(0, 0, 0, 0.3),
+                                    blurRadius: 4,
+                                    offset: Offset(0, 2),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            SizedBox(height: isMobile ? 3 : 6),
+                            Text(
+                              'Dashboard dummy data untuk hands-on UAT Social Network Analysis.',
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                color: Colors.white70,
+                                height: 1.3,
+                                fontSize: isMobile ? 12 : 14,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ),
           ),
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.18),
-                  borderRadius: BorderRadius.circular(18),
-                  border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.25),
-                  ),
-                ),
-                child: const Icon(
-                  Icons.analytics_rounded,
-                  color: Colors.white,
-                  size: 30,
-                ),
-              ),
-              const SizedBox(width: 16),
-              const Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'SNA Lite UAT Dashboard',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 26,
-                        fontWeight: FontWeight.w900,
-                      ),
-                    ),
-                    SizedBox(height: 5),
-                    Text(
-                      'Dashboard dummy data untuk hands-on User Acceptance Testing Social Network Analysis.',
-                      style: TextStyle(color: Colors.white70, height: 1.35),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -611,67 +720,187 @@ class _ReportPageState extends State<ReportPage>
             ? (width - 18) / 2
             : width;
 
+        final stats = [
+          {
+            'title': 'New Users',
+            'value': d.totalNewUsers,
+            'icon': Icons.people_alt_rounded,
+            'color': _DS.primary,
+          },
+          {
+            'title': 'KawanSS Posts',
+            'value': d.totalKawanssPosts,
+            'icon': Icons.article_rounded,
+            'color': _DS.green,
+          },
+          {
+            'title': 'Infoss Posts',
+            'value': d.totalInfossPosts,
+            'icon': Icons.newspaper_rounded,
+            'color': _DS.purple,
+          },
+          {
+            'title': 'Instagram Posts',
+            'value': d.totalInstagramPosts,
+            'icon': Icons.camera_alt_rounded,
+            'color': _DS.accent,
+          },
+          {
+            'title': 'Instagram Users',
+            'value': d.totalInstagramUsers,
+            'icon': Icons.person_pin_rounded,
+            'color': _DS.primary,
+          },
+          {
+            'title': 'Comments',
+            'value': d.totalComments,
+            'icon': Icons.forum_rounded,
+            'color': _DS.green,
+          },
+          {
+            'title': 'Likes',
+            'value': d.totalLikes,
+            'icon': Icons.thumb_up_alt_rounded,
+            'color': const Color(0xFFE11D48),
+          },
+        ];
+
         return Wrap(
-          spacing: 18,
-          runSpacing: 18,
-          children: [
-            SizedBox(
-              width: cardWidth,
-              child: StatCard(
-                title: 'New Users',
-                value: d.totalNewUsers,
-                icon: Icons.people_alt_rounded,
+          spacing: 20,
+          runSpacing: 20,
+          children: List.generate(stats.length, (index) {
+            final stat = stats[index];
+            return AnimatedBuilder(
+              animation: animationController,
+              builder: (context, child) {
+                final delay = index * 0.1;
+                final animation = CurvedAnimation(
+                  parent: animationController,
+                  curve: Interval(
+                    delay,
+                    delay + 0.6,
+                    curve: Curves.easeOutCubic,
+                  ),
+                );
+
+                return FadeTransition(
+                  opacity: animation,
+                  child: SlideTransition(
+                    position: Tween<Offset>(
+                      begin: const Offset(0, 0.2),
+                      end: Offset.zero,
+                    ).animate(animation),
+                    child: SizedBox(
+                      width: cardWidth,
+                      child: _animatedStatCard(
+                        title: stat['title'] as String,
+                        value: stat['value'] as int,
+                        icon: stat['icon'] as IconData,
+                        color: stat['color'] as Color,
+                      ),
+                    ),
+                  ),
+                );
+              },
+            );
+          }),
+        );
+      },
+    );
+  }
+
+  Widget _animatedStatCard({
+    required String title,
+    required int value,
+    required IconData icon,
+    required Color color,
+  }) {
+    return StatefulBuilder(
+      builder: (context, setState) {
+        bool isTapped = false;
+        bool isHovering = false;
+        final isMobile = MediaQuery.of(context).size.width < 768;
+
+        return GestureDetector(
+          onTapDown: isMobile ? (_) => setState(() => isTapped = true) : null,
+          onTapUp: isMobile ? (_) => setState(() => isTapped = false) : null,
+          onTapCancel: isMobile ? () => setState(() => isTapped = false) : null,
+          child: MouseRegion(
+            onEnter: isMobile ? null : (_) => setState(() => isHovering = true),
+            onExit: isMobile ? null : (_) => setState(() => isHovering = false),
+            cursor: isMobile ? MouseCursor.defer : SystemMouseCursors.click,
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeOutCubic,
+              transform: (isHovering || isTapped)
+                  ? (Matrix4.diagonal3Values(1.05, 1.05, 1.0)
+                      ..setTranslationRaw(0.0, -8.0, 0.0))
+                  : Matrix4.identity(),
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: _DS.card,
+                borderRadius: BorderRadius.circular(_DS.radius),
+                border: Border.all(color: _DS.border),
+                boxShadow: (isHovering || isTapped)
+                    ? _DS.primaryShadow
+                    : _DS.softShadow,
+                gradient: (isHovering || isTapped)
+                    ? LinearGradient(
+                        colors: [color.withValues(alpha: 0.05), _DS.card],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      )
+                    : null,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: color.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: color.withValues(alpha: 0.2),
+                          blurRadius: 12,
+                          offset: const Offset(0, 6),
+                        ),
+                      ],
+                    ),
+                    child: Icon(icon, color: color, size: 28),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    NumberFormat.decimalPattern('id_ID').format(value),
+                    style: TextStyle(
+                      fontSize: 28,
+                      fontWeight: FontWeight.w900,
+                      color: _DS.textPrimary,
+                      shadows: (isHovering || isTapped)
+                          ? [
+                              Shadow(
+                                color: color.withValues(alpha: 0.3),
+                                blurRadius: 8,
+                                offset: const Offset(0, 2),
+                              ),
+                            ]
+                          : null,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    title,
+                    style: TextStyle(
+                      color: _DS.textSecondary,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
               ),
             ),
-            SizedBox(
-              width: cardWidth,
-              child: StatCard(
-                title: 'KawanSS Posts',
-                value: d.totalKawanssPosts,
-                icon: Icons.article_rounded,
-              ),
-            ),
-            SizedBox(
-              width: cardWidth,
-              child: StatCard(
-                title: 'Infoss Posts',
-                value: d.totalInfossPosts,
-                icon: Icons.newspaper_rounded,
-              ),
-            ),
-            SizedBox(
-              width: cardWidth,
-              child: StatCard(
-                title: 'Instagram Posts',
-                value: d.totalInstagramPosts,
-                icon: Icons.camera_alt_rounded,
-              ),
-            ),
-            SizedBox(
-              width: cardWidth,
-              child: StatCard(
-                title: 'Instagram Users',
-                value: d.totalInstagramUsers,
-                icon: Icons.person_pin_rounded,
-              ),
-            ),
-            SizedBox(
-              width: cardWidth,
-              child: StatCard(
-                title: 'Comments',
-                value: d.totalComments,
-                icon: Icons.forum_rounded,
-              ),
-            ),
-            SizedBox(
-              width: cardWidth,
-              child: StatCard(
-                title: 'Likes',
-                value: d.totalLikes,
-                icon: Icons.thumb_up_alt_rounded,
-              ),
-            ),
-          ],
+          ),
         );
       },
     );
@@ -1014,11 +1243,18 @@ class _ReportPageState extends State<ReportPage>
     Color color,
   ) {
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.055),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: color.withValues(alpha: 0.18)),
+        color: color.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: color.withValues(alpha: 0.2)),
+        boxShadow: [
+          BoxShadow(
+            color: color.withValues(alpha: 0.1),
+            blurRadius: 16,
+            offset: const Offset(0, 8),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1026,56 +1262,95 @@ class _ReportPageState extends State<ReportPage>
           Row(
             children: [
               Container(
-                width: 9,
-                height: 9,
-                decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+                width: 12,
+                height: 12,
+                decoration: BoxDecoration(
+                  color: color,
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: color.withValues(alpha: 0.4),
+                      blurRadius: 8,
+                      spreadRadius: 2,
+                    ),
+                  ],
+                ),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: 10),
               Expanded(
                 child: Text(
                   title,
                   style: TextStyle(
                     color: color,
                     fontWeight: FontWeight.w900,
-                    fontSize: 14,
+                    fontSize: 16,
                   ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 14),
           if (items.isEmpty)
-            const Text('No data', style: TextStyle(color: _DS.textSecondary))
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: _DS.surface,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: _DS.border),
+              ),
+              child: const Text(
+                'No data',
+                style: TextStyle(color: _DS.textSecondary),
+                textAlign: TextAlign.center,
+              ),
+            )
           else
             ...items.take(10).map((item) {
               return Container(
-                margin: const EdgeInsets.only(bottom: 8),
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                margin: const EdgeInsets.only(bottom: 10),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 10,
+                ),
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.72),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: color.withValues(alpha: 0.10)),
+                  color: Colors.white.withValues(alpha: 0.8),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: color.withValues(alpha: 0.12)),
+                  boxShadow: [
+                    BoxShadow(
+                      color: color.withValues(alpha: 0.08),
+                      blurRadius: 8,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
                 ),
                 child: Row(
                   children: [
                     Container(
-                      width: 24,
-                      height: 24,
+                      width: 28,
+                      height: 28,
                       alignment: Alignment.center,
                       decoration: BoxDecoration(
                         color: color,
                         shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: color.withValues(alpha: 0.3),
+                            blurRadius: 6,
+                            offset: const Offset(0, 3),
+                          ),
+                        ],
                       ),
                       child: Text(
                         '${item.rank}',
                         style: const TextStyle(
                           color: Colors.white,
-                          fontSize: 10,
+                          fontSize: 12,
                           fontWeight: FontWeight.w900,
                         ),
                       ),
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: 10),
                     Expanded(
                       child: Text(
                         item.label,
@@ -1083,25 +1358,26 @@ class _ReportPageState extends State<ReportPage>
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
                           fontWeight: FontWeight.w700,
-                          fontSize: 12,
+                          fontSize: 13,
                           color: _DS.textPrimary,
                         ),
                       ),
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: 10),
                     Container(
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 7,
+                        horizontal: 8,
                         vertical: 4,
                       ),
                       decoration: BoxDecoration(
-                        color: color.withValues(alpha: 0.10),
+                        color: color.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(999),
+                        border: Border.all(color: color.withValues(alpha: 0.2)),
                       ),
                       child: Text(
                         item.score.toStringAsFixed(4),
                         style: TextStyle(
-                          fontSize: 10,
+                          fontSize: 11,
                           color: color,
                           fontWeight: FontWeight.w900,
                         ),

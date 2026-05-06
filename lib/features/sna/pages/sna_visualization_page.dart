@@ -671,7 +671,9 @@ class _GraphCanvasState extends State<_GraphCanvas> {
 
   @override
   Widget build(BuildContext context) {
-    final isCompact = MediaQuery.of(context).size.width < 760;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isCompact = screenWidth < 768;
+    final isMobile = screenWidth < 600;
 
     return Stack(
       children: [
@@ -712,44 +714,67 @@ class _GraphCanvasState extends State<_GraphCanvas> {
           ),
         ),
         Positioned(
-          top: 14,
-          left: 14,
-          child: _InfoChip(
-            nodeCount: nodes.length,
-            edgeCount: edges.length,
-            communityCount: communityCount,
-            graphViewType: widget.graphViewType,
-            layoutType: widget.layoutType,
+          top: isMobile ? 10 : 14,
+          left: isMobile ? 10 : 14,
+          right: isMobile ? 10 : null,
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: _InfoChip(
+              nodeCount: nodes.length,
+              edgeCount: edges.length,
+              communityCount: communityCount,
+              graphViewType: widget.graphViewType,
+              layoutType: widget.layoutType,
+              isCompact: isCompact,
+            ),
           ),
         ),
         if (widget.showControls)
           Positioned(
-            right: 14,
-            bottom: 18,
-            left: isCompact ? 14 : null,
-            child: _VisualControlPanel(
-              source: widget.source,
-              mode: widget.mode,
-              limit: widget.limit,
-              graphViewType: widget.graphViewType,
-              layoutType: widget.layoutType,
-              nodeSizeMetric: widget.nodeSizeMetric,
-              onGraphViewTypeChanged: widget.onGraphViewTypeChanged,
-              onLayoutChanged: widget.onLayoutChanged,
-              onNodeSizeMetricChanged: widget.onNodeSizeMetricChanged,
-              onSourceChanged: widget.onSourceChanged,
-              onModeChanged: widget.onModeChanged,
-              onLimitChanged: widget.onLimitChanged,
+            right: isMobile ? 10 : 14,
+            bottom: isMobile ? 10 : 18,
+            left: isCompact && isMobile ? 10 : null,
+            child: SingleChildScrollView(
+              child: _VisualControlPanel(
+                source: widget.source,
+                mode: widget.mode,
+                limit: widget.limit,
+                graphViewType: widget.graphViewType,
+                layoutType: widget.layoutType,
+                nodeSizeMetric: widget.nodeSizeMetric,
+                onGraphViewTypeChanged: widget.onGraphViewTypeChanged,
+                onLayoutChanged: widget.onLayoutChanged,
+                onNodeSizeMetricChanged: widget.onNodeSizeMetricChanged,
+                onSourceChanged: widget.onSourceChanged,
+                onModeChanged: widget.onModeChanged,
+                onLimitChanged: widget.onLimitChanged,
+                isCompact: isCompact,
+              ),
             ),
           ),
-        Positioned(
-          left: 14,
-          bottom: 18,
-          child: _EdgeLegend(
-            isWeighted: widget.graphViewType.isWeighted,
-            isDirected: widget.graphViewType.isDirected,
+        if (!isMobile)
+          Positioned(
+            left: 14,
+            bottom: 18,
+            child: _EdgeLegend(
+              isWeighted: widget.graphViewType.isWeighted,
+              isDirected: widget.graphViewType.isDirected,
+            ),
           ),
-        ),
+        if (isMobile)
+          Positioned(
+            left: 10,
+            bottom: 10,
+            right: 10,
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: _EdgeLegend(
+                isWeighted: widget.graphViewType.isWeighted,
+                isDirected: widget.graphViewType.isDirected,
+                isCompact: true,
+              ),
+            ),
+          ),
       ],
     );
   }
@@ -761,6 +786,7 @@ class _InfoChip extends StatelessWidget {
   final int communityCount;
   final GraphViewType graphViewType;
   final GraphLayoutType layoutType;
+  final bool isCompact;
 
   const _InfoChip({
     required this.nodeCount,
@@ -768,13 +794,18 @@ class _InfoChip extends StatelessWidget {
     required this.communityCount,
     required this.graphViewType,
     required this.layoutType,
+    this.isCompact = false,
   });
 
   @override
   Widget build(BuildContext context) {
+    final isMobile = MediaQuery.of(context).size.width < 600;
+
     return Container(
-      constraints: const BoxConstraints(maxWidth: 330),
-      padding: const EdgeInsets.all(14),
+      constraints: BoxConstraints(
+        maxWidth: isMobile ? 290 : (isCompact ? 280 : 330),
+      ),
+      padding: EdgeInsets.all(isMobile ? 10 : 14),
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.94),
         borderRadius: BorderRadius.circular(16),
@@ -788,22 +819,25 @@ class _InfoChip extends StatelessWidget {
         ],
       ),
       child: Wrap(
-        spacing: 8,
-        runSpacing: 8,
+        spacing: isMobile ? 6 : 8,
+        runSpacing: isMobile ? 6 : 8,
         children: [
-          _pill(Icons.circle_outlined, '$nodeCount Nodes'),
-          _pill(Icons.timeline, '$edgeCount Edges'),
-          _pill(Icons.hub, '$communityCount Clusters'),
-          _pill(Icons.account_tree, graphViewType.label),
-          _pill(Icons.scatter_plot, layoutType.label),
+          _pill(Icons.circle_outlined, '$nodeCount Nodes', isMobile),
+          _pill(Icons.timeline, '$edgeCount Edges', isMobile),
+          _pill(Icons.hub, '$communityCount Clusters', isMobile),
+          _pill(Icons.account_tree, graphViewType.label, isMobile),
+          _pill(Icons.scatter_plot, layoutType.label, isMobile),
         ],
       ),
     );
   }
 
-  Widget _pill(IconData icon, String label) {
+  Widget _pill(IconData icon, String label, bool isMobile) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
+      padding: EdgeInsets.symmetric(
+        horizontal: isMobile ? 7 : 9,
+        vertical: isMobile ? 4 : 6,
+      ),
       decoration: BoxDecoration(
         color: _kBg,
         borderRadius: BorderRadius.circular(999),
@@ -811,15 +845,17 @@ class _InfoChip extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 13, color: _kAccent),
-          const SizedBox(width: 5),
+          Icon(icon, size: isMobile ? 11 : 13, color: _kAccent),
+          SizedBox(width: isMobile ? 3 : 5),
           Text(
             label,
-            style: const TextStyle(
+            style: TextStyle(
               color: _kText,
-              fontSize: 11,
+              fontSize: isMobile ? 9 : 11,
               fontWeight: FontWeight.w700,
             ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
         ],
       ),
@@ -842,6 +878,7 @@ class _VisualControlPanel extends StatefulWidget {
   final ValueChanged<String> onSourceChanged;
   final ValueChanged<int> onModeChanged;
   final ValueChanged<int> onLimitChanged;
+  final bool isCompact;
 
   const _VisualControlPanel({
     required this.source,
@@ -856,6 +893,7 @@ class _VisualControlPanel extends StatefulWidget {
     required this.onSourceChanged,
     required this.onModeChanged,
     required this.onLimitChanged,
+    this.isCompact = false,
   });
 
   @override
@@ -879,9 +917,12 @@ class _VisualControlPanelState extends State<_VisualControlPanel> {
 
   @override
   Widget build(BuildContext context) {
+    final isMobile = MediaQuery.of(context).size.width < 600;
+    final width = isMobile ? (MediaQuery.of(context).size.width - 20) : 330.0;
+
     return Container(
-      width: 330,
-      padding: const EdgeInsets.all(14),
+      width: width,
+      padding: EdgeInsets.all(isMobile ? 12 : 14),
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.96),
         borderRadius: BorderRadius.circular(18),
@@ -897,68 +938,89 @@ class _VisualControlPanelState extends State<_VisualControlPanel> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Row(
+          Row(
             children: [
-              Icon(Icons.tune_rounded, color: _kAccent, size: 18),
-              SizedBox(width: 8),
+              Icon(
+                Icons.tune_rounded,
+                color: _kAccent,
+                size: isMobile ? 16 : 18,
+              ),
+              SizedBox(width: isMobile ? 6 : 8),
               Text(
-                'Visual Controls',
-                style: TextStyle(fontWeight: FontWeight.w900, color: _kText),
+                'Controls',
+                style: TextStyle(
+                  fontWeight: FontWeight.w900,
+                  color: _kText,
+                  fontSize: isMobile ? 13 : 14,
+                ),
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: isMobile ? 10 : 12),
           _dropdown<String>(
             label: 'Source',
             value: widget.source,
             items: const ['app', 'instagram'],
             itemLabel: (item) => item.toUpperCase(),
             onChanged: widget.onSourceChanged,
+            isMobile: isMobile,
           ),
-          const SizedBox(height: 10),
+          SizedBox(height: isMobile ? 8 : 10),
           _dropdown<int>(
             label: 'Mode',
             value: widget.mode,
             items: const [1, 2, 3],
             itemLabel: (item) {
-              if (item == 1) return '1 - User to User';
-              if (item == 2) return '2 - User to Post';
-              return '3 - Post to Post';
+              if (item == 1) return '1-Mode';
+              if (item == 2) return '2-Mode';
+              return '3-Mode';
             },
             onChanged: widget.onModeChanged,
+            isMobile: isMobile,
           ),
-          const SizedBox(height: 10),
+          SizedBox(height: isMobile ? 8 : 10),
           _dropdown<GraphViewType>(
-            label: 'Graph Type',
+            label: 'Type',
             value: widget.graphViewType,
             items: GraphViewType.values,
-            itemLabel: (item) => item.label,
+            itemLabel: (item) => item.label.substring(0, 10),
             onChanged: widget.onGraphViewTypeChanged,
+            isMobile: isMobile,
           ),
-          const SizedBox(height: 10),
+          SizedBox(height: isMobile ? 8 : 10),
           _dropdown<GraphLayoutType>(
             label: 'Layout',
             value: widget.layoutType,
             items: GraphLayoutType.values,
             itemLabel: (item) => item.label,
             onChanged: widget.onLayoutChanged,
+            isMobile: isMobile,
           ),
-          const SizedBox(height: 10),
+          SizedBox(height: isMobile ? 8 : 10),
           _dropdown<NodeSizeMetric>(
-            label: 'Node Size',
+            label: 'Size',
             value: widget.nodeSizeMetric,
             items: NodeSizeMetric.values,
             itemLabel: (item) => item.label,
             onChanged: widget.onNodeSizeMetricChanged,
+            isMobile: isMobile,
           ),
-          const SizedBox(height: 10),
+          SizedBox(height: isMobile ? 8 : 10),
           TextField(
             controller: limitController,
             keyboardType: TextInputType.number,
-            decoration: const InputDecoration(
+            decoration: InputDecoration(
               labelText: 'Limit',
               isDense: true,
-              border: OutlineInputBorder(),
+              filled: true,
+              fillColor: _kBg,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(isMobile ? 10 : 12),
+              ),
+              contentPadding: EdgeInsets.symmetric(
+                horizontal: isMobile ? 10 : 12,
+                vertical: isMobile ? 8 : 10,
+              ),
             ),
             onSubmitted: (value) {
               final parsed = int.tryParse(value);
@@ -978,6 +1040,7 @@ class _VisualControlPanelState extends State<_VisualControlPanel> {
     required List<T> items,
     required String Function(T item) itemLabel,
     required ValueChanged<T> onChanged,
+    required bool isMobile,
   }) {
     return DropdownButtonFormField<T>(
       initialValue: value,
@@ -986,12 +1049,22 @@ class _VisualControlPanelState extends State<_VisualControlPanel> {
         isDense: true,
         filled: true,
         fillColor: _kBg,
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(isMobile ? 10 : 12),
+        ),
+        contentPadding: EdgeInsets.symmetric(
+          horizontal: isMobile ? 10 : 12,
+          vertical: isMobile ? 8 : 10,
+        ),
       ),
       items: items.map((item) {
         return DropdownMenuItem<T>(
           value: item,
-          child: Text(itemLabel(item), overflow: TextOverflow.ellipsis),
+          child: Text(
+            itemLabel(item),
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(fontSize: isMobile ? 12 : 13),
+          ),
         );
       }).toList(),
       onChanged: (value) {
@@ -1004,14 +1077,21 @@ class _VisualControlPanelState extends State<_VisualControlPanel> {
 class _EdgeLegend extends StatelessWidget {
   final bool isWeighted;
   final bool isDirected;
+  final bool isCompact;
 
-  const _EdgeLegend({required this.isWeighted, required this.isDirected});
+  const _EdgeLegend({
+    required this.isWeighted,
+    required this.isDirected,
+    this.isCompact = false,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final isMobile = MediaQuery.of(context).size.width < 600;
+
     return Container(
-      width: 250,
-      padding: const EdgeInsets.all(12),
+      width: isCompact ? (isMobile ? 220 : 250) : 250,
+      padding: EdgeInsets.all(isMobile ? 10 : 12),
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.95),
         borderRadius: BorderRadius.circular(16),
@@ -1020,29 +1100,36 @@ class _EdgeLegend extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Graph Legend',
-            style: TextStyle(fontWeight: FontWeight.w900, fontSize: 12),
+          Text(
+            'Legend',
+            style: TextStyle(
+              fontWeight: FontWeight.w900,
+              fontSize: isMobile ? 11 : 12,
+            ),
           ),
-          const SizedBox(height: 10),
-          _line(width: 1.5, label: 'Normal edge'),
-          const SizedBox(height: 8),
+          SizedBox(height: isMobile ? 8 : 10),
+          _line(width: 1.5, label: 'Normal', isMobile: isMobile),
+          SizedBox(height: isMobile ? 6 : 8),
           _line(
             width: 5,
-            label: isWeighted ? 'High weight edge' : 'Weighted off',
+            label: isWeighted ? 'Weighted' : 'Off',
+            isMobile: isMobile,
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: isMobile ? 6 : 8),
           Row(
+            mainAxisSize: MainAxisSize.min,
             children: [
               Icon(
                 isDirected ? Icons.arrow_forward : Icons.remove,
-                size: 16,
+                size: isMobile ? 14 : 16,
                 color: _kAccent,
               ),
-              const SizedBox(width: 8),
+              SizedBox(width: isMobile ? 6 : 8),
               Text(
-                isDirected ? 'Directed edge active' : 'Undirected view',
-                style: const TextStyle(fontSize: 11, color: _kMuted),
+                isDirected ? 'Directed' : 'Undirected',
+                style: TextStyle(fontSize: isMobile ? 9 : 11, color: _kMuted),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
             ],
           ),
@@ -1051,19 +1138,31 @@ class _EdgeLegend extends StatelessWidget {
     );
   }
 
-  Widget _line({required double width, required String label}) {
+  Widget _line({
+    required double width,
+    required String label,
+    bool isMobile = false,
+  }) {
     return Row(
+      mainAxisSize: MainAxisSize.min,
       children: [
         Container(
-          width: 44,
+          width: isMobile ? 36 : 44,
           height: width,
           decoration: BoxDecoration(
             color: const Color(0xFF334155),
             borderRadius: BorderRadius.circular(99),
           ),
         ),
-        const SizedBox(width: 10),
-        Text(label, style: const TextStyle(fontSize: 11, color: _kMuted)),
+        SizedBox(width: isMobile ? 8 : 10),
+        Expanded(
+          child: Text(
+            label,
+            style: TextStyle(fontSize: isMobile ? 9 : 11, color: _kMuted),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
       ],
     );
   }

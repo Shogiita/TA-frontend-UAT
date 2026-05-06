@@ -1,5 +1,7 @@
 class ApiConstants {
-  static const String baseUrl = 'http://127.0.0.1:8000';
+  // static const String baseUrl = 'http://127.0.0.1:8000';
+  static const String baseUrl =
+      'https://ta-backend-uat-387510652840.asia-southeast2.run.app';
 
   static const String dashboard = '/report/dashboard';
   static const String instagramProfile = '/report/instagram-profile';

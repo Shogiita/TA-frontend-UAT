@@ -1,0 +1,30 @@
+steps:
+  # 1. Build Docker image untuk Frontend
+  - name: "gcr.io/cloud-builders/docker"
+    args: ["build", "-t", "gcr.io/$PROJECT_ID/ta-frontend-web", "."]
+
+  # 2. Push image ke Google Container Registry
+  - name: "gcr.io/cloud-builders/docker"
+    args: ["push", "gcr.io/$PROJECT_ID/ta-frontend-web"]
+
+  # 3. Deploy ke Google Cloud Run
+  - name: "gcr.io/google.com/cloudsdktool/cloud-sdk"
+    entrypoint: gcloud
+    args:
+      - "run"
+      - "deploy"
+      - "ta-frontend-uat"
+      - "--image"
+      - "gcr.io/$PROJECT_ID/ta-frontend-web"
+      - "--region"
+      - "asia-southeast2"
+      - "--platform"
+      - "managed"
+      - "--allow-unauthenticated"
+      - "--port"
+      - "8080"
+      - "--min-instances"
+      - "1"
+
+images:
+  - "gcr.io/$PROJECT_ID/ta-frontend-web"
