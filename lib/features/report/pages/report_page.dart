@@ -129,9 +129,9 @@ class _ReportPageState extends State<ReportPage>
                 borderRadius: BorderRadius.circular(24),
               ),
               child: ConstrainedBox(
-                constraints: const BoxConstraints(
-                  maxWidth: 460,
-                  maxHeight: 720,
+                constraints: BoxConstraints(
+                  maxWidth: MediaQuery.of(context).size.width * 0.95,
+                  maxHeight: MediaQuery.of(context).size.height * 0.90,
                 ),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -624,57 +624,125 @@ class _ReportPageState extends State<ReportPage>
     final profile = state.instagramProfile!;
     final formatter = NumberFormat.decimalPattern('id_ID');
 
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: _cardDecoration(),
-      child: Row(
-        children: [
-          CircleAvatar(
-            radius: 42,
-            backgroundColor: _DS.primary.withValues(alpha: 0.12),
-            backgroundImage: profile.profilePictureUrl.isNotEmpty
-                ? NetworkImage(profile.profilePictureUrl)
-                : null,
-            child: profile.profilePictureUrl.isEmpty
-                ? const Icon(Icons.person_rounded, size: 34)
-                : null,
-          ),
-          const SizedBox(width: 18),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  profile.name,
-                  style: const TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.w900,
-                    color: _DS.textPrimary,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  '@${profile.username}',
-                  style: const TextStyle(
-                    color: _DS.primary,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  profile.biography,
-                  maxLines: 3,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(color: _DS.textSecondary, height: 1.4),
-                ),
-              ],
-            ),
-          ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isSmall = constraints.maxWidth < 760;
+        final stats = [
           _profileMetric('Followers', formatter.format(profile.followersCount)),
           _profileMetric('Following', formatter.format(profile.followsCount)),
           _profileMetric('Posts', formatter.format(profile.mediaCount)),
-        ],
-      ),
+        ];
+
+        return Container(
+          padding: const EdgeInsets.all(20),
+          decoration: _cardDecoration(),
+          child: isSmall
+              ? Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        CircleAvatar(
+                          radius: 42,
+                          backgroundColor: _DS.primary.withValues(alpha: 0.12),
+                          backgroundImage: profile.profilePictureUrl.isNotEmpty
+                              ? NetworkImage(profile.profilePictureUrl)
+                              : null,
+                          child: profile.profilePictureUrl.isEmpty
+                              ? const Icon(Icons.person_rounded, size: 34)
+                              : null,
+                        ),
+                        const SizedBox(width: 18),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                profile.name,
+                                style: const TextStyle(
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.w900,
+                                  color: _DS.textPrimary,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                '@${profile.username}',
+                                style: const TextStyle(
+                                  color: _DS.primary,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                profile.biography,
+                                style: const TextStyle(
+                                  color: _DS.textSecondary,
+                                  height: 1.4,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 18),
+                    Wrap(spacing: 12, runSpacing: 12, children: stats),
+                  ],
+                )
+              : Row(
+                  children: [
+                    CircleAvatar(
+                      radius: 42,
+                      backgroundColor: _DS.primary.withValues(alpha: 0.12),
+                      backgroundImage: profile.profilePictureUrl.isNotEmpty
+                          ? NetworkImage(profile.profilePictureUrl)
+                          : null,
+                      child: profile.profilePictureUrl.isEmpty
+                          ? const Icon(Icons.person_rounded, size: 34)
+                          : null,
+                    ),
+                    const SizedBox(width: 18),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            profile.name,
+                            style: const TextStyle(
+                              fontSize: 22,
+                              fontWeight: FontWeight.w900,
+                              color: _DS.textPrimary,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            '@${profile.username}',
+                            style: const TextStyle(
+                              color: _DS.primary,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            profile.biography,
+                            maxLines: 3,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              color: _DS.textSecondary,
+                              height: 1.4,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 18),
+                    ...stats,
+                  ],
+                ),
+        );
+      },
     );
   }
 
@@ -714,11 +782,7 @@ class _ReportPageState extends State<ReportPage>
       builder: (context, constraints) {
         final width = constraints.maxWidth;
 
-        final cardWidth = width > 1180
-            ? (width - 54) / 4
-            : width > 760
-            ? (width - 18) / 2
-            : width;
+        final cardWidth = width > 760 ? (width - 20) / 2 : width;
 
         final stats = [
           {
@@ -738,24 +802,6 @@ class _ReportPageState extends State<ReportPage>
             'value': d.totalInfossPosts,
             'icon': Icons.newspaper_rounded,
             'color': _DS.purple,
-          },
-          {
-            'title': 'Instagram Posts',
-            'value': d.totalInstagramPosts,
-            'icon': Icons.camera_alt_rounded,
-            'color': _DS.accent,
-          },
-          {
-            'title': 'Instagram Users',
-            'value': d.totalInstagramUsers,
-            'icon': Icons.person_pin_rounded,
-            'color': _DS.primary,
-          },
-          {
-            'title': 'Comments',
-            'value': d.totalComments,
-            'icon': Icons.forum_rounded,
-            'color': _DS.green,
           },
           {
             'title': 'Likes',
@@ -1560,6 +1606,29 @@ class _ReportPageState extends State<ReportPage>
                 },
               ),
               const SizedBox(width: 8),
+              _viewModeButton(
+                label: 'Visualisasi',
+                active: geodesicViewMode == GeodesicViewMode.visualization,
+                onTap: () {
+                  setState(() {
+                    geodesicViewMode = GeodesicViewMode.visualization;
+                  });
+                },
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              _viewModeButton(
+                label: 'Daftar',
+                active: geodesicViewMode == GeodesicViewMode.list,
+                onTap: () {
+                  setState(() => geodesicViewMode = GeodesicViewMode.list);
+                },
+              ),
               _viewModeButton(
                 label: 'Visualisasi',
                 active: geodesicViewMode == GeodesicViewMode.visualization,

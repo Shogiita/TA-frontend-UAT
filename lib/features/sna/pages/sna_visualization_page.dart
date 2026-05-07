@@ -610,13 +610,19 @@ class _GraphCanvasState extends State<_GraphCanvas> {
                 ],
               ),
               const SizedBox(height: 18),
-              Row(
-                children: [
-                  _detailMetric('Degree', node.metrics.degree),
-                  _detailMetric('In', node.metrics.inDegree),
-                  _detailMetric('Out', node.metrics.outDegree),
-                  _detailMetric('Weight', node.metrics.weightedDegree),
-                ],
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  return Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      _detailMetric('Degree', node.metrics.degree),
+                      _detailMetric('In', node.metrics.inDegree),
+                      _detailMetric('Out', node.metrics.outDegree),
+                      _detailMetric('Weight', node.metrics.weightedDegree),
+                    ],
+                  );
+                },
               ),
               const SizedBox(height: 12),
               Align(
@@ -643,23 +649,22 @@ class _GraphCanvasState extends State<_GraphCanvas> {
   }
 
   Widget _detailMetric(String label, double value) {
-    return Expanded(
-      child: Container(
-        margin: const EdgeInsets.only(right: 8),
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: _kBg,
-          borderRadius: BorderRadius.circular(14),
-        ),
-        child: Column(
-          children: [
-            Text(
-              value.toStringAsFixed(2),
-              style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16),
-            ),
-            Text(label, style: const TextStyle(color: _kMuted, fontSize: 11)),
-          ],
-        ),
+    return Container(
+      constraints: const BoxConstraints(minWidth: 92, maxWidth: 160),
+      margin: const EdgeInsets.only(right: 8),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: _kBg,
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Column(
+        children: [
+          Text(
+            value.toStringAsFixed(2),
+            style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16),
+          ),
+          Text(label, style: const TextStyle(color: _kMuted, fontSize: 11)),
+        ],
       ),
     );
   }
